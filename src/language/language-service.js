@@ -48,7 +48,7 @@ const LanguageService = {
         .where({ language_id })
       
       //get head by lowest next value
-      const wordsLL = new 
+      // const wordsLL = new LinkedList()
       let tempHead = words[0]
       for (let word in words) {
         if (words[word].value < tempHead.value) {

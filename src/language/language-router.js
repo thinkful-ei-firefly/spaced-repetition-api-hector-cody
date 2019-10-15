@@ -69,7 +69,7 @@ languageRouter.get('/head', async (req, res, next) => {
     }
     console.log(head)
     head = {
-      nextWord: head.next.translation,
+      nextWord: head.next.,
       wordCorrectCount: head.correct_count,
       wordIncorrectCount: head.incorrect_count,
       totalScore: head.correct_count-head.incorrect_count
