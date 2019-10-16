@@ -62,26 +62,64 @@ class LinkedList {
     }
   }
 
-  swapNodes(item, position) {
-    let currNode = item;
-    if (!item) {
-      return null;
-    }
+  // swapNodes(item, position) {
+  //   let currNode = item;
+  //   if (!item) {
+  //     return null;
+  //   }
+  //   if (position === 0) {
+  //     oldHead = this.head;
+  //     item.next = oldHead;
+  //     item.value.next = oldHead.value;
+  //     oldHead.value.next = item.value.id;
+  //     this.head = item;
+  //   } else {
+  //     for (let i = 0; i < position; i++) {
+  //       if (!currNode.next) {
+  //         break;
+  //       }
+  //       currNode = currNode.next;
+  //     }
+  //     item.next = currNode.next;
+  //     item.value.next = currNode.value.next;
+  //     currNode.value.next = item.value.id;
+  //     currNode.next = item;
+  //   }
+  // }
 
-    if (position === 0) {
-      this.insertFirst(item);
-    } else {
-      for (let i = 0; i < position; i++) {
-        if (!currNode.next) {
-          break;
-        }
-        currNode = currNode.next;
-      }
-      item.next = currNode.next;
-      item.value.next = currNode.value.next;
-      currNode.value.next = item.value.id;
-      currNode.next = item;
+  swapNodes(x, y) {
+    // Search for x (keep track of prevX and currX)
+    let prevX = null;
+    let currX = this.head;
+
+    while (currX !== null && currX.data !== x) {
+      prevX = currX;
+      currX = currX.next;
     }
+    // Search for y
+    let prevY = null;
+    let currY = this.head;
+
+    while (currY !== null && currY.data !== y) {
+      prevY = currY;
+      currY = currY.next;
+    }
+    // if either x or y not present do nothing
+    if (currX === null || currY === null) {
+      return;
+    }
+    // If x is not head
+    if (prevX !== null) {
+      prevX.next = currY;
+    } else this.head = currY;
+    // If y not head
+    if (prevY !== null) {
+      prevY.next = currX;
+    } else this.head = currX;
+
+    tempNode = currX.next;
+    currX.next = currY.next;
+    currY.next = tempNode;
   }
 
   insertAfter(item, nodeKey) {

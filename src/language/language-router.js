@@ -14,7 +14,7 @@ languageRouter.use(requireAuth).use(async (req, res, next) => {
 
     if (!language)
       return res.status(404).json({
-        error: `Language is not found`
+        error: `You don't have any languages`
       });
 
     req.language = language;
@@ -45,19 +45,19 @@ languageRouter.get('/head', async (req, res, next) => {
   // language = LL
   // word = _Node
   try {
-    const language = await LanguageService.getUsersLanguage(
-      req.app.get('db'),
-      req.user.id
-    );
+    // const language = await LanguageService.getUsersLanguage(
+    //   req.app.get('db'),
+    //   req.user.id
+    //);
     const nextWord = await LanguageService.getNextWord(
       req.app.get('db'),
-      language.head
+      req.language.head
     );
     res.json({
       nextWord: nextWord.original,
       wordCorrectCount: nextWord.correct_count,
       wordIncorrectCount: nextWord.incorrect_count,
-      totalScore: language.total_score
+      totalScore: req.language.total_score
     });
   } catch (error) {
     next(error);
@@ -102,19 +102,19 @@ languageRouter.post('/guess', jsonBodyParser, async (req, res, next) => {
     }
     // swap nodes depending on memory_value
     const head = ll.head;
-    ll.head = head.next;
-    ll.swapNodes(head, memoryValue);
-
-    answer.nextWord = ll.head.value.original;
     answer.wordCorrectCount = ll.head.value.correct_count;
     answer.wordIncorrectCount = ll.head.value.incorrect_count;
     answer.totalScore = ll.total_score;
     answer.answer = head.value.translation;
 
+    ll.head = head.next;
+    ll.swapNodes(head, memoryValue);
+    answer.nextWord = ll.head.value.original;
+
     //create array from linkedList
     const array = ll.mapList();
     LanguageService.persistLL(req.app.get('db'), ll, array);
-
+    ll.display(ll);
     res.json(answer);
   } catch (error) {
     next(error);
