@@ -93,7 +93,7 @@ class LinkedList {
     }
   }
 
-  swampNodes(item, position) {
+  swapNodes(item, position) {
     let currNode = item;
     if (!item) {
       return null;
@@ -156,8 +156,8 @@ class LinkedList {
     }
   }
 
-  size(ll) {
-    currNode = ll.head;
+  size() {
+    let currNode = this.head;
     let count = 0;
     while (currNode !== null) {
       currNode = currNode.next;
@@ -167,12 +167,12 @@ class LinkedList {
     return count;
   }
 
-  mapList(callback) {
+  mapList(ll) {
     let node = this.head;
     let array = [];
     while (node) {
-      if (callback) {
-        array.push(callback(node.value));
+      if (ll) {
+        array.push(ll(node.value));
       } else {
         array.push(node.value);
       }

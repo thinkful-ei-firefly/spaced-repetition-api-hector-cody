@@ -75,7 +75,7 @@ languageRouter.post('/guess', jsonBodyParser, async (req, res, next) => {
     );
 
     // Make a Linked List
-    const ll = LanguageService.populateLinkedList(req.language, words);
+    const ll = LanguageService.populateLL(req.language, words);
 
     // check answer
     const answer = {
@@ -113,7 +113,7 @@ languageRouter.post('/guess', jsonBodyParser, async (req, res, next) => {
 
     //create array from linkedList
     const array = ll.mapList();
-    LanguageService.persist(req.app.get('db'), ll, array);
+    LanguageService.persistLL(req.app.get('db'), ll, array);
 
     res.json(answer);
   } catch (error) {
