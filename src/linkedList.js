@@ -6,8 +6,11 @@ class _Node {
 }
 
 class LinkedList {
-  constructor() {
+  constructor({ id, name, total_score }) {
     this.head = null;
+    this.id = id;
+    this.name = name;
+    this.total_score = total_score;
   }
 
   insertFirst(item) {
@@ -26,69 +29,35 @@ class LinkedList {
     }
   }
 
-  find(item) {
-    // Start at the head
-    let currNode = this.head;
-    // If the list is empty
+  insertBefore(item, nodeKey) {
     if (!this.head) {
       return null;
     }
-    // Check for the item
-    while (currNode.value !== item) {
-      /* Return null if it's the end of the list 
-         and the item is not on the list */
-      if (currNode.next === null) {
-        return null;
-      } else {
-        // Otherwise, keep looking
-        currNode = currNode.next;
-      }
-    }
-    // Found it
-    return currNode;
-  }
+    // console.log(item)
 
-  remove(item) {
-    // If the list is empty
-    if (!this.head) {
-      return null;
-    }
-    // If the node to be removed is head, make the next node head
-    if (this.head.value === item) {
-      this.head = this.head.next;
-      return;
-    }
-    // Start at the head
+    // if (this.head.value === item) {
+    //   this.insertFirst(item);
+    //   return;
+    // }
+
+    let newNode = new _Node(item, null);
+
     let currNode = this.head;
-    // Keep track of previous
-    let previousNode = this.head;
+    let prevNode = this.head;
 
-    while (currNode !== null && currNode.value !== item) {
-      // Save the previous node
-      previousNode = currNode;
+    while (currNode !== null) {
+      prevNode = currNode;
       currNode = currNode.next;
-    }
-    if (currNode === null) {
-      console.log('Item not found');
-      return;
-    }
-    previousNode.next = currNode.next;
-  }
 
-  insertBefore(newItem, key) {
-    if (this.head.value === key || !this.head) {
-      this.insertFirst(newItem);
-    } else {
-      // Start at the head
-      let currNode = this.head;
-      // Check for the item
-      while (currNode.value !== null) {
-        // console.log(currNode)
-        if (currNode.next.value === key) {
-          currNode.next = new _Node(newItem, currNode.next);
-          return;
-        }
-        currNode = currNode.next;
+      if (currNode === null) {
+        console.log('Item not found');
+        return;
+      }
+
+      if (currNode.value.id === nodeKey) {
+        prevNode.next = newNode;
+        newNode.next = currNode;
+        return;
       }
     }
   }
@@ -98,6 +67,7 @@ class LinkedList {
     if (!item) {
       return null;
     }
+
     if (position === 0) {
       this.insertFirst(item);
     } else {
@@ -114,65 +84,115 @@ class LinkedList {
     }
   }
 
-  insertAfter(newItem, key) {
-    if (this.head.value === key || !this.head) {
-      this.insertFirst(newItem);
-    } else {
-      // Start at the head
-      let currNode = this.head;
-      // Check for the item
-      while (currNode.value !== null) {
-        currNode = currNode.next;
-        // console.log(currNode.next)
-        if (currNode.value === key) {
-          currNode.next = new _Node(newItem, currNode.next);
-          return;
-        }
+  insertAfter(item, nodeKey) {
+    if (!this.head) {
+      return null;
+    }
+
+    if (this.head.value === item) {
+      this.insertFirst(item);
+      return;
+    }
+
+    let newNode = new _Node(item, null);
+
+    let currNode = this.head;
+
+    while (currNode !== null) {
+      currNode = currNode.next;
+
+      if (currNode === null) {
+        console.log('Item not found');
+        return;
+      }
+
+      if (currNode.value === nodeKey) {
+        newNode.next = currNode.next;
+        currNode.next = newNode;
+        return;
       }
     }
   }
 
-  insertAt(newItem, key) {
-    if (this.head.value === key || !this.head || key === 0) {
-      this.insertFirst(newItem);
-    } else {
-      let currNode = this.head;
-      let counter = 1; // WHY
-      while (currNode.value !== null) {
-        if (counter === key) {
-          currNode.next = new _Node(newItem, currNode.next);
-          return;
-        }
+  // insertLastCycle(item, node) {
+  //   if (this.head === null) {
+  //     this.insertFirst(item);
+  //   } else {
+  //     let tempNode = this.head;
+  //     while (tempNode.next !== null) {
+  //       tempNode = tempNode.next;
+  //     }
+  //     tempNode.next = new _Node(item, node);
+  //     console.log('a string');
+  //   }
+  // }
+
+  find(item) {
+    let currNode = this.head;
+    if (!this.head) {
+      return null;
+    }
+    while (currNode.value !== item) {
+      if (currNode.next === null) {
+        return null;
+      } else {
         currNode = currNode.next;
-        counter++;
       }
     }
+    return currNode;
   }
-  display(ll) {
-    currNode = ll.head;
+
+  remove(item) {
+    if (!this.head) {
+      return null;
+    }
+    if (this.head.value === item) {
+      this.head = this.head.next;
+      return;
+    }
+
+    let currNode = this.head;
+    let prevNode = this.head;
+
+    while (currNode !== null && currNode.value !== item) {
+      prevNode = currNode;
+      currNode = currNode.next;
+    }
+    if (currNode === null) {
+      console.log('Item not found');
+      return;
+    }
+    prevNode.next = currNode.next;
+    return;
+  }
+
+  display() {
+    let currNode = this.head;
     while (currNode !== null) {
-      console.log(currNode.value);
+      console.log(currNode.value.original);
       currNode = currNode.next;
     }
   }
 
   size() {
     let currNode = this.head;
-    let count = 0;
+    let counter = 0;
     while (currNode !== null) {
+      counter += 1;
       currNode = currNode.next;
-      count++;
     }
-    console.log(count);
-    return count;
+    return counter;
   }
 
-  mapList(ll) {
+  //add mapList method to show as Arr[]
+  //use this in service to communicate
+  //data between server and DB
+  mapList(callback) {
     let node = this.head;
     let array = [];
     while (node) {
-      if (ll) {
-        array.push(ll(node.value));
+      if (callback) {
+        array.push(callback(node.value));
       } else {
         array.push(node.value);
       }

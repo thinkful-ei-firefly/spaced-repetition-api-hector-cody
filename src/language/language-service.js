@@ -57,7 +57,7 @@ const LanguageService = {
     return LL;
   },
 
-  persistLL(db, ll) {
+  persistLL(db, ll, array) {
     return db.transaction(trx =>
       Promise.all([
         db('language')
@@ -67,15 +67,15 @@ const LanguageService = {
             total_score: ll.total_score,
             head: ll.head.value.id
           }),
-        ...ll.forEach(node => {
+        ...ll.mapList(node => {
           db('word')
             .transacting(trx)
-            .where('id', node.value.id)
+            .where('id', node.id)
             .update({
-              memory_value: node.value.memory_value,
-              correct_count: node.value.correct_count,
-              incorrect_count: node.value.incorrect_count,
-              next: node.next ? node.next.value.id : null
+              memory_value: node.memory_value,
+              correct_count: node.correct_count,
+              incorrect_count: node.incorrect_count,
+              next: node.next ? node.next : null
             });
         })
       ])
