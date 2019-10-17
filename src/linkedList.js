@@ -280,27 +280,27 @@ class LinkedList {
   //add mapList method to show as Arr[]
   //use this in service to communicate
   //data between server and DB
-  mapList(callback) {
-    let node = this.head;
-    let array = [];
+  makeArray() {
+    let node = this.head; // start by creating a copy of the node at the top of our list
+    const arr = []; // create an empty Array, so we can push each db update to it
+    console.log('Make array');
     while (node) {
-      if (callback) {
-        array.push(callback(node));
-      } else {
-        array.push(node);
-      }
+      // iterate over all nodes
+      console.log(node.value.original);
+      arr.push(node);
       node = node.next;
     }
-    return array;
+    //console.log(arr);
+    return arr; // return an Array with each update callback within
   }
 
-  forEach(cb) {
+  forEach() {
     // when we call this method, we would also pass the callback instruction to update in db!
     let node = this.head; // start by creating a copy of the node at the top of our list
     const arr = []; // create an empty Array, so we can push each db update to it
     while (node) {
       // iterate over all nodes
-      arr.push(cb(node));
+      arr.push(node);
       node = node.next;
     }
     return arr; // return an Array with each update callback within

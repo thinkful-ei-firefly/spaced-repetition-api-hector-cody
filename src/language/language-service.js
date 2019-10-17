@@ -39,6 +39,14 @@ const LanguageService = {
       .first();
   },
 
+  getHead(db, id) {
+    return db
+      .from('word')
+      .select('*')
+      .where({ id })
+      .first();
+  },
+
   populateLL(db, language, words) {
     let LL = new LinkedList(); // import linked list
     LL.id = language.id;
@@ -85,6 +93,13 @@ const LanguageService = {
       });
   },
 
+  updateHead(db, user_id, newData) {
+    return db('language')
+      .where({ user_id })
+      .update(newData)
+      .returning('*');
+  },
+
   persistLL(db, ll) {
     return db.transaction(trx =>
       Promise.all([
@@ -95,7 +110,7 @@ const LanguageService = {
             total_score: ll.total_score,
             head: ll.head.value.id
           }),
-        ...ll.mapList(node => {
+        ...ll.makeArray(node =>
           db('word')
             .transacting(trx)
             .where('id', node.value.id)
@@ -104,8 +119,8 @@ const LanguageService = {
               correct_count: node.value.correct_count,
               incorrect_count: node.value.incorrect_count,
               next: node.next ? node.next.value.id : null
-            });
-        })
+            })
+        )
       ])
     );
   }
