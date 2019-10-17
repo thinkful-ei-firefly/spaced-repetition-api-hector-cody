@@ -3,7 +3,7 @@ const LanguageService = require('./language-service');
 const { requireAuth } = require('../middleware/jwt-auth');
 
 const languageRouter = express.Router();
-const jsonBodyParser = express.json();
+const bodyParser = express.json();
 
 languageRouter.use(requireAuth).use(async (req, res, next) => {
   try {
@@ -16,7 +16,6 @@ languageRouter.use(requireAuth).use(async (req, res, next) => {
       return res.status(404).json({
         error: `You don't have any languages`
       });
-
     req.language = language;
     next();
   } catch (error) {
@@ -30,6 +29,7 @@ languageRouter.get('/', async (req, res, next) => {
       req.app.get('db'),
       req.language.id
     );
+
     res.json({
       language: req.language,
       words
@@ -41,83 +41,74 @@ languageRouter.get('/', async (req, res, next) => {
 });
 
 languageRouter.get('/head', async (req, res, next) => {
-  // Async function
-  // language = LL
-  // word = _Node
+  // return the next quiz word to be asked
   try {
-    // const language = await LanguageService.getUsersLanguage(
-    //   req.app.get('db'),
-    //   req.user.id
-    //);
-    const nextWord = await LanguageService.getNextWord(
+    const nextQuizWord = await LanguageService.getNextWord(
       req.app.get('db'),
       req.language.head
     );
     res.json({
-      nextWord: nextWord.original,
-      wordCorrectCount: nextWord.correct_count,
-      wordIncorrectCount: nextWord.incorrect_count,
+      nextWord: nextQuizWord.original,
+      wordCorrectCount: nextQuizWord.correct_count,
+      wordIncorrectCount: nextQuizWord.incorrect_count,
       totalScore: req.language.total_score
     });
-  } catch (error) {
-    next(error);
+  } catch (e) {
+    next(e);
   }
 });
 
-languageRouter.post('/guess', jsonBodyParser, async (req, res, next) => {
+languageRouter.route('/guess').post(bodyParser, async (req, res, next) => {
   if (!req.body.guess) {
-    return res.status(400).json({ error: `Missing 'guess' in request body` });
+    return res.status(400).json({
+      error: `Missing 'guess' in request body`
+    });
   }
-  try {
-    const words = await LanguageService.getLanguageWords(
-      req.app.get('db'),
-      req.language.id
-    );
 
-    // Make a Linked List
-    const ll = LanguageService.populateLL(req.language, words);
+  const words = await LanguageService.getLanguageWords(
+    req.app.get('db'),
+    req.language.id
+  );
 
-    // check answer
-    const answer = {
-      isCorrect: false
-    };
+  const ll = LanguageService.populateLL(req.app.get('db'), req.language, words);
 
-    // compare guess to real translation
-    if (
-      req.body.guess.toLowerCase() === ll.head.value.translation.toLowerCase()
-    ) {
-      ll.head.value.correct_count++;
-      ll.head.value.memory_value *= 2;
-      ll.total_score = ll.total_score + 1;
-      answer.isCorrect = true;
-    } else {
-      ll.head.value.incorrect_count++;
-      ll.head.value.memory_value = 1;
-    }
-    // begin memory value check to find where to place
-    // cap memory value at linked list size in case memory
-    let memoryValue = ll.head.value.memory_value;
-    if (memoryValue > ll.size()) {
-      memoryValue = ll.size();
-    }
-    // swap nodes depending on memory_value
-    const head = ll.head;
-    answer.wordCorrectCount = ll.head.value.correct_count;
-    answer.wordIncorrectCount = ll.head.value.incorrect_count;
-    answer.totalScore = ll.total_score;
-    answer.answer = head.value.translation;
-
-    ll.head = head.next;
-    ll.swapNodes(head, memoryValue);
-    answer.nextWord = ll.head.value.original;
-
-    //create array from linkedList
-    const array = ll.mapList();
-    LanguageService.persistLL(req.app.get('db'), ll, array);
-    ll.display(ll);
-    res.json(answer);
-  } catch (error) {
-    next(error);
+  if (req.body.guess === ll.head.value.translation) {
+    ll.head.value.correct_count++; // increase correct count for curr word
+    ll.head.value.memory_value =
+      ll.head.value.memory_value * 2 >= ll.listNodes().length
+        ? ll.listNodes().length - 1
+        : ll.head.value.memory_value * 2; // double memory value, moving head/word M spaces back
+    ll.total_score++;
+    ll.moveHeadBy(ll.head.value.memory_value);
+    LanguageService.persistLL(req.app.get('db'), ll).then(() => {
+      res.json({
+        nextWord: ll.head.value.original,
+        wordCorrectCount: ll.head.value.correct_count,
+        wordIncorrectCount: ll.head.value.incorrect_count,
+        totalScore: ll.total_score,
+        answer: req.body.guess, // guess is correct answer
+        isCorrect: true
+      });
+      next();
+    });
+  } else {
+    ll.head.value.incorrect_count++; // increase incorrect count for curr word
+    ll.head.value.memory_value = 1; // reset memory value to 1
+    let rightAnswer = ll.head.value.translation; // store right answer before moving head
+    ll.moveHeadBy(ll.head.value.memory_value);
+    LanguageService.persistLL(req.app.get('db'), ll).then(() => {
+      res.json({
+        nextWord: ll.head.value.original,
+        wordCorrectCount: ll.head.value.correct_count,
+        wordIncorrectCount: ll.head.value.incorrect_count,
+        totalScore: ll.total_score,
+        answer: rightAnswer, // translation is right answer, guess wrong
+        isCorrect: false
+      });
+      console.log('DISPLAY');
+      ll.display();
+      next();
+    });
   }
 });
 

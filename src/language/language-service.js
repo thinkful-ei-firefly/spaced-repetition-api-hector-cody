@@ -39,25 +39,53 @@ const LanguageService = {
       .first();
   },
 
-  populateLL(language, words) {
-    const LL = new LinkedList({
-      id: language.id,
-      name: language.name,
-      total_score: language.total_score
-    });
+  populateLL(db, language, words) {
+    let LL = new LinkedList(); // import linked list
+    LL.id = language.id;
+    LL.name = language.name;
+    LL.total_score = language.total_score;
     let word = words.find(w => w.id === language.head);
-    LL.insertFirst(word);
 
-    for (let i = 0; i < words.length; i++) {
-      if (word.next) {
-        word = words.find(w => w.id === word.next);
-        LL.insertLast(word);
-      }
+    LL.insertFirst({
+      id: word.id,
+      original: word.original,
+      translation: word.translation,
+      memory_value: word.memory_value,
+      correct_count: word.correct_count,
+      incorrect_count: word.incorrect_count
+    });
+    while (word.next) {
+      word = words.find(w => w.id === word.next);
+      LL.insertLast({
+        id: word.id,
+        original: word.original,
+        translation: word.translation,
+        memory_value: word.memory_value,
+        correct_count: word.correct_count,
+        incorrect_count: word.incorrect_count
+      });
     }
     return LL;
   },
 
-  persistLL(db, ll, array) {
+  updateTotalScore(db, language) {
+    return db('language')
+      .where({ id: language_id })
+      .update({ total_score: language.total_score + 1 });
+  },
+
+  updateWord(db, word) {
+    return db
+      .from('word')
+      .where({ id: word.id })
+      .update({
+        memory_value: word.memory_value,
+        incorrect_count: word.incorrect_count,
+        correct_count: word.correct_count
+      });
+  },
+
+  persistLL(db, ll) {
     return db.transaction(trx =>
       Promise.all([
         db('language')
@@ -70,12 +98,12 @@ const LanguageService = {
         ...ll.mapList(node => {
           db('word')
             .transacting(trx)
-            .where('id', node.id)
+            .where('id', node.value.id)
             .update({
-              memory_value: node.memory_value,
-              correct_count: node.correct_count,
-              incorrect_count: node.incorrect_count,
-              next: node.next ? node.next : null
+              memory_value: node.value.memory_value,
+              correct_count: node.value.correct_count,
+              incorrect_count: node.value.incorrect_count,
+              next: node.next ? node.next.value.id : null
             });
         })
       ])
