@@ -73,6 +73,7 @@ languageRouter.route('/guess').post(bodyParser, async (req, res, next) => {
   // Make LL w/all words
   //console.log('words', words);
   const ll = LanguageService.populateLL(req.app.get('db'), req.language, words);
+  console.log(' ')
   console.log('populateLL');
   ll.display();
   //console.log(ll.head);
@@ -82,8 +83,8 @@ languageRouter.route('/guess').post(bodyParser, async (req, res, next) => {
     ll.head.value.memory_value *= 2; // double memory value, moving head/word M spaces back
     ll.total_score += 1;
     ll.swapNodes(0, 3);
-    // console.log('correct');
-    // ll.display();
+    console.log('correct');
+    ll.display();
 
     LanguageService.persistLL(req.app.get('db'), ll).then(() => {
       res.json({
@@ -97,18 +98,22 @@ languageRouter.route('/guess').post(bodyParser, async (req, res, next) => {
       next();
     });
   } else {
-    const incorrectCount = ll.head.value.incorrect_count + 1; // increase incorrect count for curr word
+    const curr = ll.head; 
+    ll.head.value.incorrect_count += 1;
     ll.head.value.memory_value = 1; // reset memory value to 1
     let rightAnswer = ll.head.value.translation; // store right answer before moving head
+    console.log('b4:',ll.head.value)
     ll.swapNodes(0, 1);
+    console.log(ll.head.value)
+    console.log(' ')
     console.log('incorrect');
     ll.display();
 
     LanguageService.persistLL(req.app.get('db'), ll).then(() => {
       res.json({
-        nextWord: ll.head.next.value.original,
-        wordCorrectCount: ll.head.value.correct_count,
-        wordIncorrectCount: incorrectCount,
+        nextWord: ll.head.value.original,
+        wordCorrectCount: curr.value.correct_count,
+        wordIncorrectCount: curr.value.incorrect_count,
         totalScore: ll.total_score,
         answer: rightAnswer, // translation is right answer, guess wrong
         isCorrect: false
