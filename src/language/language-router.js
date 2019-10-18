@@ -64,31 +64,23 @@ languageRouter.route('/guess').post(bodyParser, async (req, res, next) => {
       error: `Missing 'guess' in request body`
     });
   }
-  // get all words from db
+
   const words = await LanguageService.getLanguageWords(
     req.app.get('db'),
     req.language.id
   );
-
-  // Make LL w/all words
-  //console.log('words', words);
   const ll = LanguageService.populateLL(req.app.get('db'), req.language, words);
-  console.log('populateLL');
-  ll.display();
-  //console.log(ll.head);
 
   if (req.body.guess === ll.head.value.translation) {
-    let correctCount = ll.head.value.correct_count + 1; // increase correct count for curr word
+    ll.head.value.correct_count += 1; // increase correct count for curr word
     ll.head.value.memory_value *= 2; // double memory value, moving head/word M spaces back
-    ll.total_score += 1;
-    ll.swapNodes(0, 3);
-    // console.log('correct');
-    // ll.display();
-
+    ll.total_score++;
+    ll.moveHeadBy(ll.head.value.memory_value);
+    //ll.swapNodes(0, 3);
     LanguageService.persistLL(req.app.get('db'), ll).then(() => {
       res.json({
-        nextWord: ll.head.next.value.original,
-        wordCorrectCount: correctCount,
+        nextWord: ll.head.value.original,
+        wordCorrectCount: ll.head.value.correct_count,
         wordIncorrectCount: ll.head.value.incorrect_count,
         totalScore: ll.total_score,
         answer: req.body.guess, // guess is correct answer
@@ -97,23 +89,19 @@ languageRouter.route('/guess').post(bodyParser, async (req, res, next) => {
       next();
     });
   } else {
-    const incorrectCount = ll.head.value.incorrect_count + 1; // increase incorrect count for curr word
+    ll.head.value.incorrect_count += 1; // increase incorrect count for curr word
     ll.head.value.memory_value = 1; // reset memory value to 1
     let rightAnswer = ll.head.value.translation; // store right answer before moving head
     ll.swapNodes(0, 1);
-    console.log('incorrect');
-    ll.display();
-
     LanguageService.persistLL(req.app.get('db'), ll).then(() => {
       res.json({
-        nextWord: ll.head.next.value.original,
+        nextWord: ll.head.value.original,
         wordCorrectCount: ll.head.value.correct_count,
-        wordIncorrectCount: incorrectCount,
+        wordIncorrectCount: ll.head.value.incorrect_count,
         totalScore: ll.total_score,
         answer: rightAnswer, // translation is right answer, guess wrong
         isCorrect: false
       });
-
       next();
     });
   }

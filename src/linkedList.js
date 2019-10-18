@@ -9,7 +9,6 @@ class LinkedList {
   constructor() {
     this.head = null;
   }
-
   insertFirst(item) {
     this.head = new _Node(item, this.head);
   }
@@ -25,6 +24,111 @@ class LinkedList {
       tempNode.next = new _Node(item, null);
     }
   }
+  /**Inserts a new node after a node containing the key.*/
+  insertAfter(key, itemToInsert) {
+    let tempNode = this.head;
+    while (tempNode !== null && tempNode.value !== key) {
+      tempNode = tempNode.next;
+    }
+    if (tempNode !== null) {
+      tempNode.next = new _Node(itemToInsert, tempNode.next);
+    }
+  }
+  /* Inserts a new node before a node containing the key.*/
+  insertBefore(key, itemToInsert) {
+    if (this.head == null) {
+      return;
+    }
+    if (this.head.value == key) {
+      this.insertFirst(itemToInsert);
+      return;
+    }
+    let prevNode = null;
+    let currNode = this.head;
+    while (currNode !== null && currNode.value !== key) {
+      prevNode = currNode;
+      currNode = currNode.next;
+    }
+    if (currNode === null) {
+      console.log('Node not found to insert');
+      return;
+    }
+    //insert between current and previous
+    prevNode.next = new _Node(itemToInsert, currNode);
+  }
+  insertAt(nthPosition, itemToInsert) {
+    if (nthPosition < 0) {
+      throw new Error('Position error');
+    }
+    if (nthPosition === 0) {
+      this.insertFirst(itemToInsert);
+    } else {
+      // Find the node which we want to insert after
+      const node = this._findNthElement(nthPosition - 1);
+      const newNode = new _Node(itemToInsert, null);
+      newNode.next = node.next;
+      node.next = newNode;
+    }
+  }
+  _findNthElement(position) {
+    let node = this.head;
+    for (let i = 0; i < position; i++) {
+      node = node.next;
+    }
+    return node;
+  }
+  remove(item) {
+    //if the list is empty
+    if (!this.head) {
+      return null;
+    }
+    //if the node to be removed is head, make the next node head
+    if (this.head === item) {
+      this.head = this.head.next;
+      return;
+    }
+    //start at the head
+    let currNode = this.head;
+    //keep track of previous
+    let previousNode = this.head;
+    while (currNode !== null && currNode.value !== item) {
+      //save the previous node
+      previousNode = currNode;
+      currNode = currNode.next;
+    }
+    if (currNode === null) {
+      console.log('Item not found');
+      return;
+    }
+    previousNode.next = currNode.next;
+  }
+  find(item) {
+    //get
+    //start at the head
+    let currNode = this.head;
+    //if the list is empty
+    if (!this.head) {
+      return null;
+    }
+    while (currNode.value !== item) {
+      //return null if end of the list
+      // and the item is not on the list
+      if (currNode.next === null) {
+        return null;
+      } else {
+        //keep looking
+        currNode = currNode.next;
+      }
+    }
+    //found it
+    return currNode;
+  }
+
+  moveHeadBy(position) {
+    let head = this.head; // start by creating a copy of the node at the top of our list
+    this.head = this.head.next; // make next node the head
+    this.insertAt(position, head.value); // use insertAt method to insert where you need to
+  }
 
   listNodes() {
     let node = this.head;
@@ -36,59 +140,28 @@ class LinkedList {
     return arr;
   }
 
-  insertBefore(item, nodeKey) {
-    if (!this.head) {
-      return null;
+  mapList(callback) {
+    // TODO where to call?
+    let node = this.head;
+    let arr = [];
+    while (node) {
+      arr.push(callback(node));
+      node = node.next;
     }
-    // console.log(item)
-
-    // if (this.head.value === item) {
-    //   this.insertFirst(item);
-    //   return;
-    // }
-
-    let newNode = new _Node(item, null);
-
-    let currNode = this.head;
-    let prevNode = this.head;
-
-    while (currNode !== null) {
-      prevNode = currNode;
-      currNode = currNode.next;
-
-      if (currNode === null) {
-        console.log('Item not found');
-        return;
-      }
-
-      if (currNode.value.id === nodeKey) {
-        prevNode.next = newNode;
-        newNode.next = currNode;
-        return;
-      }
-    }
+    return arr;
   }
 
-  // swapNodes(first, second) {
-  //   let currNode = item;
-  //   if (item < 0) {
-  //     return null;
-  //   }
-  //   if (position === 0) {
-  //     this.insertFirst(item);
-  //   } else {
-  //     for (let i = 0; i < position; i++) {
-  //       if (!currNode.next) {
-  //         break;
-  //       }
-  //       currNode = currNode.next;
-  //     }
-  //     item.next = currNode.next;
-  //     item.value.next = currNode.value.next;
-  //     currNode.value.next = item.value.id;
-  //     currNode.next = item;
-  //   }
-  // }
+  forEach(cb) {
+    // when we call this method, we would also pass the callback instruction to update in db!
+    let node = this.head; // start by creating a copy of the node at the top of our list
+    const arr = []; // create an empty Array, so we can push each db update to it
+    while (node) {
+      // iterate over all nodes
+      arr.push(cb(node));
+      node = node.next;
+    }
+    return arr; // return an Array with each update callback within
+  }
 
   swapNodes(first, second) {
     // 0, 2 // swap firsts next value with second and second with first
@@ -148,163 +221,6 @@ class LinkedList {
     firstNode.next = secondNode.next;
     secondNode.next = tempFirstNodeNext;
   }
-
-  insertAt(nthPosition, itemToInsert) {
-    if (nthPosition < 0) {
-      throw new Error('Position error');
-    }
-    if (nthPosition === 0) {
-      this.insertFirst(itemToInsert);
-    } else {
-      const node = this._findNthElement(nthPosition - 1);
-      const newNode = new _Node(itemToInsert, null);
-      newNode.next = node.next;
-      node.next = newNode;
-    }
-  }
-  _findNthElement(position) {
-    let node = this.head;
-    for (let i = 0; i < position; i++) {
-      node = node.next;
-    }
-    return node;
-  }
-
-  insertAfter(item, nodeKey) {
-    if (!this.head) {
-      return null;
-    }
-
-    if (this.head.value === item) {
-      this.insertFirst(item);
-      return;
-    }
-
-    let newNode = new _Node(item, null);
-
-    let currNode = this.head;
-
-    while (currNode !== null) {
-      currNode = currNode.next;
-
-      if (currNode === null) {
-        console.log('Item not found');
-        return;
-      }
-
-      if (currNode.value === nodeKey) {
-        newNode.next = currNode.next;
-        currNode.next = newNode;
-        return;
-      }
-    }
-  }
-
-  // insertLastCycle(item, node) {
-  //   if (this.head === null) {
-  //     this.insertFirst(item);
-  //   } else {
-  //     let tempNode = this.head;
-  //     while (tempNode.next !== null) {
-  //       tempNode = tempNode.next;
-  //     }
-  //     tempNode.next = new _Node(item, node);
-  //     console.log('a string');
-  //   }
-  // }
-
-  find(item) {
-    let currNode = this.head;
-    if (!this.head) {
-      return null;
-    }
-    while (currNode.value !== item) {
-      if (currNode.next === null) {
-        return null;
-      } else {
-        currNode = currNode.next;
-      }
-    }
-    return currNode;
-  }
-
-  remove(item) {
-    if (!this.head) {
-      return null;
-    }
-    if (this.head.value === item) {
-      this.head = this.head.next;
-      return;
-    }
-
-    let currNode = this.head;
-    let prevNode = this.head;
-
-    while (currNode !== null && currNode.value !== item) {
-      prevNode = currNode;
-      currNode = currNode.next;
-    }
-    if (currNode === null) {
-      console.log('Item not found');
-      return;
-    }
-    prevNode.next = currNode.next;
-    return;
-  }
-
-  display() {
-    const arr = [];
-    let currNode = this.head;
-    while (currNode !== null) {
-      console.log(currNode.value.original);
-      currNode = currNode.next;
-    }
-  }
-
-  size() {
-    let currNode = this.head;
-    let counter = 0;
-    while (currNode !== null) {
-      counter += 1;
-      currNode = currNode.next;
-    }
-    return counter;
-  }
-
-  moveHeadBy(level) {
-    let head = this.head;
-    this.head = this.head.next;
-    this.insertAt(level, head.value);
-  }
-
-  //add mapList method to show as Arr[]
-  //use this in service to communicate
-  //data between server and DB
-  makeArray() {
-    let node = this.head; // start by creating a copy of the node at the top of our list
-    const arr = []; // create an empty Array, so we can push each db update to it
-    console.log('Make array');
-    while (node) {
-      // iterate over all nodes
-      console.log(node.value.original);
-      arr.push(node);
-      node = node.next;
-    }
-    //console.log(arr);
-    return arr; // return an Array with each update callback within
-  }
-
-  forEach() {
-    // when we call this method, we would also pass the callback instruction to update in db!
-    let node = this.head; // start by creating a copy of the node at the top of our list
-    const arr = []; // create an empty Array, so we can push each db update to it
-    while (node) {
-      // iterate over all nodes
-      arr.push(node);
-      node = node.next;
-    }
-    return arr; // return an Array with each update callback within
-  }
 }
 
-module.exports = { LinkedList };
+module.exports = LinkedList;

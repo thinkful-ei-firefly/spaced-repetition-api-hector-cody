@@ -1,4 +1,4 @@
-const { LinkedList } = require('../linkedList');
+const LinkedList = require('../linkedList');
 
 const LanguageService = {
   getUsersLanguage(db, user_id) {
@@ -30,31 +30,20 @@ const LanguageService = {
       )
       .where({ language_id });
   },
-
   getNextWord(db, id) {
-    return db
-      .from('word')
-      .select('*')
+    return db('word')
+      .select('id', 'next', 'original', 'correct_count', 'incorrect_count')
       .where({ id })
       .first();
   },
-
-  getHead(db, id) {
-    return db
-      .from('word')
-      .select('*')
-      .where({ id })
-      .first();
-  },
-
   populateLL(db, language, words) {
-    let LL = new LinkedList(); // import linked list
-    LL.id = language.id;
-    LL.name = language.name;
-    LL.total_score = language.total_score;
+    let wordList = new LinkedList(); // import linked list
+    wordList.id = language.id;
+    wordList.name = language.name; // french
+    wordList.total_score = language.total_score;
     let word = words.find(w => w.id === language.head);
 
-    LL.insertFirst({
+    wordList.insertFirst({
       id: word.id,
       original: word.original,
       translation: word.translation,
@@ -64,7 +53,7 @@ const LanguageService = {
     });
     while (word.next) {
       word = words.find(w => w.id === word.next);
-      LL.insertLast({
+      wordList.insertLast({
         id: word.id,
         original: word.original,
         translation: word.translation,
@@ -73,15 +62,8 @@ const LanguageService = {
         incorrect_count: word.incorrect_count
       });
     }
-    return LL;
+    return wordList;
   },
-
-  updateTotalScore(db, language) {
-    return db('language')
-      .where({ id: language_id })
-      .update({ total_score: language.total_score + 1 });
-  },
-
   updateWord(db, word) {
     return db
       .from('word')
@@ -92,25 +74,24 @@ const LanguageService = {
         correct_count: word.correct_count
       });
   },
-
-  updateHead(db, user_id, newData) {
-    return db('language')
-      .where({ user_id })
-      .update(newData)
-      .returning('*');
+  updateTotalScore(db, language) {
+    return db
+      .from('language')
+      .where({ id: language.id })
+      .update({ total_score: language.total_score + 1 });
   },
-
-  persistLL(db, ll) {
+  persistLL(db, linkedLanguage) {
     return db.transaction(trx =>
       Promise.all([
         db('language')
           .transacting(trx)
-          .where('id', ll.id)
+          .where('id', linkedLanguage.id)
           .update({
-            total_score: ll.total_score,
-            head: ll.head.value.id
+            total_score: linkedLanguage.total_score,
+            head: linkedLanguage.head.value.id
           }),
-        ...ll.makeArray(node =>
+
+        ...linkedLanguage.forEach(node =>
           db('word')
             .transacting(trx)
             .where('id', node.value.id)
