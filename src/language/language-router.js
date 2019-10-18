@@ -92,6 +92,7 @@ languageRouter.route('/guess').post(bodyParser, async (req, res, next) => {
     ll.head.value.incorrect_count += 1; // increase incorrect count for curr word
     ll.head.value.memory_value = 1; // reset memory value to 1
     let rightAnswer = ll.head.value.translation; // store right answer before moving head
+    console.log('b4:', ll.head.value);
     ll.swapNodes(0, 1);
     LanguageService.persistLL(req.app.get('db'), ll).then(() => {
       res.json({

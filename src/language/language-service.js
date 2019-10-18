@@ -102,8 +102,8 @@ const LanguageService = {
               next: node.next ? node.next.value.id : null
             })
         )
-      ])
-    );
+      ]).catch(err => console.log(err))
+    )
   }
 };
 

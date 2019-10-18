@@ -129,6 +129,15 @@ class LinkedList {
     this.head = this.head.next; // make next node the head
     this.insertAt(position, head.value); // use insertAt method to insert where you need to
   }
+  size() {
+    let currNode = this.head;
+    let counter = 0;
+    while (currNode !== null) {
+      counter += 1;
+      currNode = currNode.next;
+    }
+    return counter;
+  }
 
   listNodes() {
     let node = this.head;
@@ -164,13 +173,26 @@ class LinkedList {
   }
 
   swapNodes(first, second) {
-    // 0, 2 // swap firsts next value with second and second with first
+    if (this.size() - 1 < second) {
+      throw Error('Position 3 does not exist.');
+    }
+    if (first === second) {
+      // console.log('return')
+      return;
+    }
+    if (first > second) {
+      const tempFirst = first;
+      first = second;
+      second = tempFirst;
+    }
+    // 0, 2
+    // swap firsts next value with second and second with first
     let nodeB4First = null;
     let nodeB4Second = null;
     let firstNode = null;
-    let secondNode = null; //
-    const firstNext = first.next; //
-    const secondNext = second.next;
+    let secondNode = null;
+    // const firstNext = first.next
+    // const secondNext = second.next
 
     let currNode = this.head;
     let counter = 0;
@@ -211,8 +233,8 @@ class LinkedList {
     }
     // console.log(nodeB4First)
     // console.log(nodeB4Second)
-    nodeB4First ? (nodeB4First.next = secondNode) : null;
-    nodeB4Second ? (nodeB4Second.next = firstNode) : null;
+    if (nodeB4First) nodeB4First.next = secondNode;
+    if (nodeB4Second) nodeB4Second.next = firstNode;
     if (first === 0) this.head = secondNode;
     //  console.log('head:', this.head.next)
     // console.log(secondNode.next)
